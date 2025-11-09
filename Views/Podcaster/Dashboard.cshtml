@@ -1,0 +1,70 @@
+﻿@model List<Podcast_MVC.Models.Podcast>
+
+@{
+    ViewData["Title"] = "My Podcasts";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+<!-- Button to toggle Create Podcast form -->
+<button class="btn btn-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#createPodcastForm" aria-expanded="false" aria-controls="createPodcastForm">
+    + Create New Podcast
+</button>
+
+<!-- Collapsible Create Podcast Form -->
+<div class="collapse mb-4" id="createPodcastForm">
+    <div class="card card-body shadow-sm">
+        <form asp-action="CreatePodcast" method="post">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Title</label>
+                <input type="text" name="Title" class="form-control" placeholder="Enter podcast title" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Description</label>
+                <textarea name="Description" class="form-control" rows="3" placeholder="Enter podcast description" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Create Podcast</button>
+        </form>
+    </div>
+</div>
+
+<!-- Show existing podcasts -->
+@if (Model != null && Model.Any())
+{
+    <div class="mt-3">
+        @foreach (var podcast in Model)
+        {
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div class="mb-2">
+                            <h5 class="card-title mb-1">@podcast.Title</h5>
+                            <p class="card-text text-muted mb-0">@podcast.Description</p>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a asp-action="EditPodcast" asp-route-id="@podcast.PodcastID" class="btn btn-warning btn-sm d-flex align-items-center">
+                                Edit
+                            </a>
+
+                            <form asp-action="DeletePodcast" asp-route-id="@podcast.PodcastID" method="post" class="m-0">
+                                <button type="submit" class="btn btn-danger btn-sm d-flex align-items-center">
+                                    Delete
+                                </button>
+                            </form>
+
+                            <a asp-action="ManageEpisodes" asp-route-id="@podcast.PodcastID" class="btn btn-info btn-sm d-flex align-items-center">
+                                Manage Episodes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted mt-3">You have no podcasts yet. Click “Create New Podcast” to add one.</p>
+}
+

@@ -1,0 +1,48 @@
+﻿@using Podcast_MVC.Models.ViewModels
+@model List<EpisodeApprovalViewModel>
+
+@{
+    ViewData["Title"] = "Approve Episodes";
+}
+
+<h2 class="mb-4">Pending Episodes</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No pending episodes to approve.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Episode</th>
+                <th>Podcast</th>
+                <th>Creator</th>
+                <th>Upload Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ep in Model)
+            {
+                <tr>
+                    <td>@ep.Title</td>
+                    <td>@ep.PodcastTitle</td>
+                    <td>@ep.CreatorName</td>
+                    <td>@ep.ReleaseDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <form asp-action="ApproveEpisode" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@ep.EpisodeID" />
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                        <form asp-action="RejectEpisode" method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@ep.EpisodeID" />
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

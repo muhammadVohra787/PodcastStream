@@ -1,0 +1,73 @@
+﻿@using Podcast_MVC.Models.ViewModels
+@model EpisodePodcasterViewModel
+
+<h2>Edit Episode</h2>
+
+<form asp-action="EditEpisode" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Episode.EpisodeID" />
+
+    <div class="form-group">
+        <label asp-for="@Model.Episode.Title"></label>
+        <input name="Title" value="@Model.Episode.Title" class="form-control" />
+    </div>
+
+    <div class="form-group mt-3">
+        <label>Current Audio File</label><br />
+        @if (!string.IsNullOrEmpty(Model.Episode?.AudioFileURL))
+        {
+            <a asp-action="DownloadEpisodeAudio" asp-route-id="@Model.Episode.EpisodeID" class="btn-link">
+                Download Current Audio
+            </a>
+        }
+        else
+        {
+            <p>No audio uploaded.</p>
+        }
+    </div>
+
+    <div class="form-group mt-3">
+        <label>Replace Audio (optional)</label>
+        <input type="file" name="AudioFile" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+    <a asp-action="ManageEpisodes" asp-route-id="@Model.Episode.PodcastID" class="btn btn-secondary mt-3">Cancel</a>
+</form>
+
+<hr class="my-4" />
+
+<!-- COMMENTS SECTION -->
+<h3>Comments</h3>
+
+@if (Model.Comments != null && Model.Comments.Any())
+{
+    <ul class="list-group">
+        @foreach (var comment in Model.Comments)
+        {
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@comment.UserName</strong>
+                        <small class="text-muted">(@comment.Timestamp.ToLocalTime())</small>
+                        <p class="mb-1">@comment.Text</p>
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No comments yet. Be the first to comment!</p>
+}
+
+<!-- ADD NEW COMMENT FORM -->
+<div class="mt-4">
+    <form asp-action="AddComment" method="post">
+        <input type="hidden" name="EpisodeID" value="@Model.Episode.EpisodeID" />
+        <div class="form-group">
+            <textarea name="Content" class="form-control" rows="3" placeholder="Write a comment..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-success mt-2">Post Comment</button>
+    </form>
+</div>

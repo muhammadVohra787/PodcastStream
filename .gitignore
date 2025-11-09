@@ -1,0 +1,14 @@
+# Build and IDE folders
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+
+# Publish folders
+*/publish/
+
+# Temporary files
+*.tmp

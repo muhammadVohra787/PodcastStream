@@ -1,0 +1,170 @@
+@using System.Security.Claims
+@using Podcast_MVC.Models.ViewModels
+@model ViewEpisodeViewModel
+@{
+    ViewData["Title"] = "Episode Details";
+}
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Left: Podcast / Episode Info -->
+        <div class="col-md-8">
+            <h2>@Model.Title</h2>
+            <p><strong>Podcast:</strong> @Model.PodcastTitle</p>
+            <p>@Model.PodcastDescription</p>
+            <p><strong>Release Date:</strong> @Model.ReleaseDate.ToShortDateString()</p>
+            <p><strong>Play Count:</strong> @Model.PlayCount</p>
+            <p><strong>Duration:</strong> @Model.Duration.ToString("0.00") min</p>
+
+            <div class="audio-player my-3">
+                <button id="loadAudioBtn" class="btn btn-primary">Play Podcast</button>
+            </div>
+            <audio id="episodeAudio" controls style="display:none;"></audio>
+        </div>
+
+        <!-- Right: Creator Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 mb-3">
+                <h5>Creator Info</h5>
+                <p><strong>Name:</strong> @Model.CreatorName</p>
+                <p><strong>Episodes:</strong> @Model.CreatorEpisodeCount</p>
+                <button id="subscribeBtn" class="btn @(Model.IsSubcribed ? "btn-secondary" : "btn-success")">
+                    @(Model.IsSubcribed ? "Subscribed" : "Subscribe")
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- COMMENTS SECTION -->
+    <h3>Comments</h3>
+
+    @if (Model.Comments != null && Model.Comments.Any())
+    {
+        <ul class="list-group">
+            @foreach (var comment in Model.Comments)
+            {
+                var canEdit = comment.UserID == User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)
+                && (DateTime.UtcNow - comment.Timestamp.ToUniversalTime()).TotalHours <= 24;
+
+                <li class="list-group-item d-flex justify-content-between align-items-center" data-comment-id="@comment.CommentID">
+                    <div class="comment-text">
+                        <strong>@comment.UserName</strong>
+                        <small class="text-muted">(@comment.Timestamp.ToLocalTime())</small>
+                        <p class="mb-1">@comment.Text</p>
+                    </div>
+
+                    @if (canEdit)
+                    {
+                        <div class="comment-actions ms-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-btn">Edit</button>
+                            <form asp-action="EditComment" method="post" class="d-none edit-form">
+                                <input type="hidden" name="commentId" value="@comment.CommentID" />
+                                <input type="hidden" name="episodeId" value="@Model.EpisodeID" />
+                                <input type="text" name="newContent" class="form-control form-control-sm mb-1" value="@comment.Text" />
+                                <button type="submit" class="btn btn-sm btn-primary submit-btn">Submit</button>
+                                <button type="button" class="btn btn-sm btn-secondary cancel-btn">Cancel</button>
+                            </form>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No comments yet. Be the first to comment!</p>
+    }
+
+
+    <!-- ADD NEW COMMENT FORM -->
+    <div class="mt-4">
+        <form asp-action="AddComment" method="post">
+            <input type="hidden" name="EpisodeID" value="@Model.EpisodeID" />
+            <div class="form-group">
+                <textarea name="Content" class="form-control" rows="3" placeholder="Write a comment..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-success mt-2">Post Comment</button>
+        </form>
+    </div>
+
+</div>
+<script>
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const li = button.closest('li');
+            const textDiv = li.querySelector('.comment-text');
+            const form = li.querySelector('.edit-form');
+
+            // Hide text and edit button
+            textDiv.style.display = 'none';
+            button.style.display = 'none';
+
+            // Show form
+            form.classList.remove('d-none');
+        });
+    });
+
+    // Cancel button
+    document.querySelectorAll('.cancel-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const li = button.closest('li');
+            const textDiv = li.querySelector('.comment-text');
+            const editBtn = li.querySelector('.edit-btn');
+            const form = li.querySelector('.edit-form');
+
+            // Hide form
+            form.classList.add('d-none');
+
+            // Show text and edit button
+            textDiv.style.display = 'block';
+            editBtn.style.display = 'inline-block';
+        });
+    });
+</script>
+
+<script>
+    const audioElement = document.getElementById('episodeAudio');
+    const loadBtn = document.getElementById('loadAudioBtn');
+    let audioLoaded = false;
+
+    loadBtn.addEventListener('click', async function() {
+        if (audioLoaded) return;
+
+        // Send POST request to record the view
+        let res = await fetch(`/Listener/RecordView?episodeId=@Model.EpisodeID&podcastId=@Model.PodcastId`, {
+            method: 'POST'
+        });
+
+        console.log(res)
+        // Set audio source and show player
+        audioElement.src = '@Html.Raw(Model.AudioFileURL)';
+        audioElement.style.display = "block";
+        audioLoaded = true;
+
+        // Auto-play audio
+        audioElement.play().catch(err => console.log("Playback prevented:", err));
+
+        // Remove the Load button
+        loadBtn.remove();
+    });
+
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    const podcastId = @Model.PodcastId;
+    let isSubscribed = @Model.IsSubcribed.ToString().ToLower();
+
+    subscribeBtn.addEventListener('click', async function() {
+        const url = isSubscribed ? `/Listener/Unsubscribe?podcastId=${podcastId}` : `/Listener/Subscribe?podcastId=${podcastId}`;
+        const res = await fetch(url, { method: 'POST' });
+
+        if (res.ok) {
+            isSubscribed = !isSubscribed;
+
+            // Swap button text and color
+            subscribeBtn.innerText = isSubscribed ? "Subscribed" : "Subscribe";
+            subscribeBtn.classList.toggle("btn-success", !isSubscribed);
+            subscribeBtn.classList.toggle("btn-secondary", isSubscribed);
+        } else {
+            const data = await res.json().catch(() => null);
+            alert(data?.message || "Action failed");
+        }
+    });
+</script>

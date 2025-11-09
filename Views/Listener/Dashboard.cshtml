@@ -1,0 +1,124 @@
+﻿@using Podcast_MVC.Models.ViewModels
+@model ListenerDashboardViewModel
+@{
+    ViewData["Title"] = "Listener Dashboard";
+}
+
+<div class="container py-4">
+
+    <h2 class="mb-4 fw-bold text-center">Listener Dashboard</h2>
+
+    <!-- Search Bar Section -->
+    <div class="card shadow-sm mb-5 p-3 border-0">
+        <form method="get" class="row g-2 align-items-center justify-content-center">
+            <div class="col-auto">
+                <select class="form-select" name="searchType">
+                    <option value="episode" selected="@(Model.SearchType == "episode" || string.IsNullOrEmpty(Model.SearchType))">Episode Title</option>
+                    <option value="author" selected="@(Model.SearchType == "author")">Author</option>
+                </select>
+            </div>
+            <div class="col-md-6 col-sm-8">
+                <input type="text" class="form-control" name="searchQuery" placeholder="Search..." value="@Model.SearchQuery" />
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" type="submit">Search</button>
+                @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                {
+                    <a href="@Url.Action("Dashboard")" class="btn btn-outline-secondary">Clear</a>
+                }
+            </div>
+        </form>
+    </div>
+
+    <!-- Search results -->
+    @if (!string.IsNullOrEmpty(Model.SearchQuery))
+    {
+        <h5 class="text-muted text-center mb-4">
+            Showing results for "<strong>@Model.SearchQuery</strong>"
+        </h5>
+    }
+
+    <!-- Top Episodes -->
+    @if (Model.TopEpisodes.Any())
+    {
+        <h4 class="border-bottom pb-2 mb-3">Top Episodes</h4>
+        <div class="row g-3">
+            @foreach (var ep in Model.TopEpisodes)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 episode-card"
+                         onclick="openEpisodeDetails(@ep.EpisodeID, @ep.PodcastId)"
+                         style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">@ep.Title</h5>
+                            <p class="card-text mb-1"><strong>Podcast:</strong> @ep.PodcastTitle</p>
+                            <p class="card-text mb-0"><strong>Plays:</strong> @ep.PlayCount</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Recent Episodes -->
+    @if (Model.RecentEpisodes.Any())
+    {
+        <h4 class="border-bottom pb-2 mt-5 mb-3">Recent Episodes</h4>
+        <div class="row g-3">
+            @foreach (var ep in Model.RecentEpisodes)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 episode-card"
+                         onclick="openEpisodeDetails(@ep.EpisodeID, @ep.PodcastId)"
+                         style="cursor:pointer;">
+                        <div class="card-body">
+                            <h5 class="card-title">@ep.Title</h5>
+                            <p class="card-text mb-1"><strong>Podcast:</strong> @ep.PodcastTitle</p>
+                            <p class="card-text mb-0"><strong>Released:</strong> @ep.ReleaseDate.ToShortDateString()</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- All Podcasts -->
+    <h4 class="border-bottom pb-2 mt-5 mb-3">All Podcasts</h4>
+    @if (!Model.Podcasts.Any())
+    {
+        <p class="text-muted">No podcasts found.</p>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var podcast in Model.Podcasts)
+            {
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@podcast.Title</h5>
+                            <p class="text-muted">@podcast.Episodes.Count episode(s)</p>
+                            <ul class="list-group list-group-flush">
+                                @foreach (var ep in podcast.Episodes)
+                                {
+                                    <li class="list-group-item episode-card"
+                                        onclick="openEpisodeDetails(@ep.EpisodeID, @ep.PodcastId)"
+                                        style="cursor:pointer;">
+                                        <strong>@ep.Title</strong><br />
+                                        <small>Plays: @ep.PlayCount | Released: @ep.ReleaseDate.ToShortDateString()</small>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    function openEpisodeDetails(episodeId, podcastId) {
+        window.location.href = `/Listener/ViewEpisode?episodeId=${episodeId}&podcastId=${podcastId}`;
+    }
+</script>
