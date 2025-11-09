@@ -1,7 +1,3 @@
-Got it! Here’s a clean, professional README tailored for your **Podcast Streamer** project:
-
----
-
 # Podcast Streamer
 
 A **full-stack web application** for managing and streaming podcasts. Users can **browse, listen, and download episodes**, while Podcasters can **upload, edit, and manage podcasts**. Includes **role-based access control** with Admin, Podcaster, and Listener roles.
@@ -56,6 +52,3 @@ A **full-stack web application** for managing and streaming podcasts. Users can 
 * Podcasters can create podcasts, upload episodes, and manage content.
 * Admins can manage users and oversee platform activity.
 
----
-
-If you want, I can also write a **short 2–3 sentence GitHub description** suitable for the repo homepage. Do you want me to do that next?
